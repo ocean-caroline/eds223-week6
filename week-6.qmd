@@ -55,7 +55,7 @@ Let’s check out how this works by investigating an example from Zion National 
 boundary <- read_sf(system.file("vector/zion.gpkg", package = "spDataLarge")) 
 
 # load elevation raster to use as template raster object
-elevation <- rast(system.file("raster/srtm.tif", package = "spDataLarge"))
+elevation <- terra::rast(system.file("raster/srtm.tif", package = "spDataLarge"))
 
 # check and transform coordinate reference systems
 if(crs(elevation) == crs(boundary)) {
@@ -92,14 +92,32 @@ park_polygon <- boundary
 
 # create line version park boundary
 park_border <- boundary %>%
-  sf::st_cast(., "MULTILINESTRING")
+  sf::st_cast(., "MULTILINESTRING") #takes orginal polygon and turns it into a line
+
+#can break polygon into lines or even points via st_cast
+```
+
+```{r}
+tm_shape(park_polygon) +
+  tm_polygons()
+
+tm_shape(park_border) +
+  tm_lines()
 ```
 
 Now we can rasterize both the polygon and line representations of the park boundary.
 
 ```{r}
-polygon_raster <- terra::rasterize(park_polygon, elevation)
-border_raster <- terra::rasterize(park_border, elevation)
+polygon_raster <- terra::rasterize(park_polygon, elevation) #elevation is template raster, using grid cells but data 
+border_raster <- terra::rasterize(park_border, elevation) #again elevation is template raster
+```
+
+```{r}
+tm_shape(polygon_raster) +
+  tm_raster() #only one layer, hence description of one layer
+
+tm_shape(border_raster) +
+  tm_raster() #polygon vs line you are getting different types of raster grids, whatever interests with the geometry counts 
 ```
 
 In the case where you are rasterizing without a pre-existing raster you would like to match to, you can create a template raster from scratch.
